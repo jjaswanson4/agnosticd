@@ -1,16 +1,18 @@
-bastion_instance_type: "t2.medium"
-tower_instance_type: "t2.xlarge"
-s4hana_instance_type: ""
-hana_instance_type: "r4.2xlarge"
+# Default instance types
+bastion_instance_type: t2.medium
+tower_instance_type: t2.xlarge
+s4hana_instance_type: m5.8xlarge
+hana_instance_type: r4.2xlarge
 
-bastion_instance_image: RHEL84GOLD
-tower_instance_image: RHEL84GOLD
-s4hana_instance_image: RHEL84GOLD
-hana_instance_image: RHEL84GOLD
 
-hana_instance_count: 2
-s4hana_instance_count: 1
-tower_instance_count: 1
+sap_instance_image: RHEL84GOLD
+non_sap_instance_image: RHEL84GOLD
+
+# If you'd like to use a different instance image, use the overrides below
+bastion_instance_image: "{{ non_sap_instance_image }}"
+tower_instance_image: "{{ non_sap_instance_image }}"
+s4hana_instance_image: "{{ sap_instance_image }}"
+hana_instance_image: "{{ sap_instance_image }}"
 
 ansible_user: ec2-user
 remote_user: ec2-user
