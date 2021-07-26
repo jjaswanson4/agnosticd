@@ -1,0 +1,139 @@
+# Cloudformation template or equivalent should tag all hosts with Project:{{ env_type }}-{{ guid }}
+
+- name: Setup subscription/content
+  hosts:
+     - all:!windows
+  become: true
+  gather_facts: False
+  pre_tasks:
+    - name: remove RHUI repo files
+      ansible.builtin.file:
+        path: "/etc/yum.repos.d/{{ rhui_repo_file }}"
+        state: absent
+      loop_control:
+        loop_var: rhui_repo_file
+      loop: "{{ rhui_repo_files }}"
+    - name: Give SubMan repo management
+      ansible.builtin.shell:
+        cmd: subscription-manager config --rhsm.manage_repos=1
+    - name: clean SubMan
+      ansible.builtin.shell:
+        cmd: subscription-manager clean
+  tasks:
+    - name: install satellite cert bundle
+      ansible.builtin.yum:
+        name: "http://{{ satellite_fqdn }}/pub/katello-ca-consumer-latest.noarch.rpm"
+      when:
+        - satellite_fqdn is defined
+    - name: register system
+      community.general.redhat_subscription:
+        username: "{{ rhsm_username | default(omit) }}"
+        password: "{{ rhsm_password | default(omit) }}"
+        activationkey: "{{ activation_key | default(omit) }}"
+        org_id: "{{ organization_id }}"
+        pool_ids: "{{ subscription_pool_ids | default(omit) }}"
+      register: registration
+    - name: disable all repos if registration state changed
+      community.general.rhsm_repository:
+        name: '*'
+        state: disabled
+      when:
+        - registration.changed
+    - name: enable specified repositories
+      community.general.rhsm_repository:
+        name: "{{ rhel_repos }}"
+        state: enabled
+  tags:
+    - step004
+    - common_tasks 
+
+
+- name: Lock RHEL release
+  hosts:
+    - all:!windows
+  become: true
+  gather_facts: False
+  tasks:
+    - name: Lock RHEL release to SAP supported one
+      command: subscription-manager release --set={{ rhel_lock_release }}
+      register: lock_result
+      until: lock_result is succeeded
+      retries: 15
+      delay: 10
+
+  tags:
+    - step004
+    - common_tasks
+
+- name: Install Common packages and Set environment key
+  hosts:
+    - all:!windows
+  become: true
+  gather_facts: False
+  roles:
+    - { role: "common", when: 'install_common' }
+    - { role: "set_env_authorized_key", when: 'set_env_authorized_key' }
+  tags:
+    - step004
+    - common_tasks
+
+- name: Configuring Bastion Hosts
+  hosts: bastions
+  become: true
+  roles:
+    -  { role: "bastion", when: 'install_bastion' }
+    - role: bastion-student-user
+      when: install_student_user | bool
+  tags:
+    - step004
+    - bastion_tasks
+
+- name: Copy SSH RSA to cloud-user
+  hosts: bastions
+  become: true
+  tasks:
+    - copy:
+        src: /root/.ssh/{{env_authorized_key}}.pem
+        dest: /home/cloud-user/.ssh/id_rsa
+        owner: cloud-user
+        group: cloud-user
+        mode: 0400
+        remote_src: yes
+      when: cloud_provider == "osp"
+  tags:
+    - step004
+    - bastion_tasks
+
+- name: Copy SSH RSA to ec2-user
+  hosts: bastions
+  become: true
+  tasks:
+    - copy:
+        src: /root/.ssh/{{env_authorized_key}}.pem
+        dest: /home/ec2-user/.ssh/id_rsa
+        owner: ec2-user
+        group: ec2-user
+        mode: 0400
+        remote_src: yes
+      when: cloud_provider == "ec2"
+  tags:
+    - step004
+    - bastion_tasks
+
+
+- name: PreSoftware flight-check
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  become: false
+  tags:
+    - flight_check
+  tasks:
+    - name: Ensure infra-ansible external repo is pulled for additional roles
+      git:
+        repo: 'https://github.com/redhat-cop/infra-ansible.git'
+        dest: ./roles/infra-ansible
+        version: v1.0.17
+
+    - debug:
+        msg: "Pre-Software checks completed successfully"
