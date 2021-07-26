@@ -1,0 +1,36 @@
+---
+
+# Example vars file
+
+# Top level information
+env_type: ansible-sap-hana-workshop
+email: your@email.here
+software_to_deploy: none
+student_total: 2
+
+# The provisioner can automatically generate an SSH keypair for the workshop (recommended)
+set_env_authorized_key: yes
+
+# AWS Information
+cloud_provider: ec2
+aws_region: us-east-2
+# NOTE: DO NOT MAKE YOUR AWS CREDENTIALS PUBLICALLY ACCESSABLE
+aws_access_key_id: YOURAWSACCESSKEY 
+aws_secret_access_key: youraws/s3cr3tacc3ss/KEyh3r3
+
+# Custom DNS Information
+guid: '1234'
+subdomain_base_short: "{{ guid }}"
+subdomain_base_suffix: ".your.dns.zone.here.com"
+subdomain_base: "{{ subdomain_base_short }}{{ subdomain_base_suffix }}"
+
+# Subscription/Content
+# If you want to register to a satellite server, specify 'satellite_fqdn', otherwise systems will be registered to the customer portal directly
+# If the registration point has SCA enabled, subscription_pool_ids is not required, otherwise specify the pool IDs of the subscriptions to consume
+rhsm_username: redhat_customer
+rhsm_password: sup3rs3cur3p4ssw0rd
+
+rh_internal: true
+
+tower_instance_count: 1
+tower_password: 'R3dh4t123'
