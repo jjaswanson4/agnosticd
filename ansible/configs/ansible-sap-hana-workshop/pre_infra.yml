@@ -11,7 +11,6 @@
   vars:
     student_list:
       - 1
-      - 2
   tasks:
     - debug:
         msg: "Step 000 Pre Infrastructure"
@@ -41,6 +40,8 @@
         - name: set key fact
           ansible.builtin.set_fact:
             key_name: "{{ workshop_key_name | default('ansible-sap-hana-workshop-key') }}"
+            ansible_ssh_private_key_file: "{{ output_dir }}/{{ env_authorized_key }}"
+        
       when: set_env_authorized_key | bool
 
     - name: enumerate bastion instance
@@ -77,9 +78,9 @@
           {%-   set _ = d.update({"unique": true}) -%}
           {%-   set _ = d.update({"public_dns": true}) -%}
           {%-   set _ = d.update({"dns_loadbalancer": true}) -%}
-          {%-   set _ = d.update({"floating_ip": true}) -%}
-          {%-   set _ = d.update({"image": "RHEL84GOLD"}) -%}
-          {%-   set _ = d.update({"flavor": {"ec2": "t2.medium"}}) -%}
+          {%-   set _ = d.update({"floating_ip": false}) -%}
+          {%-   set _ = d.update({"image": tower_instance_image}) -%}
+          {%-   set _ = d.update({"flavor": {"ec2": tower_instance_type}}) -%}
           {%-   set _ = d.update({"tags": [{"key": "AnsibleGroup", "value": "towers"}, {"key": "ostype", "value": "linux"}, {"key": "ansible_python_interpreter", "value": "/usr/libexec/platform-python"}]}) -%}
           {%-   set _ = d.update({"rootfs_size": "100"}) -%}
           {%-   set _ = d.update({"security_groups": ["HostSG", "BastionSG", "WebSG"]}) -%}
@@ -98,8 +99,8 @@
           {%-   set _ = d.update({"public_dns": true}) -%}
           {%-   set _ = d.update({"dns_loadbalancer": true}) -%}
           {%-   set _ = d.update({"floating_ip": false}) -%}
-          {%-   set _ = d.update({"image": "RHEL84GOLD"}) -%}
-          {%-   set _ = d.update({"flavor": {"ec2": "m5.4xlarge"}}) -%}
+          {%-   set _ = d.update({"image": s4hana_instance_image}) -%}
+          {%-   set _ = d.update({"flavor": {"ec2": s4hana_instance_type}}) -%}
           {%-   set _ = d.update({"tags": [{"key": "AnsibleGroup", "value": "s4hanas"}, {"key": "ostype", "value": "linux"}, {"key": "ansible_python_interpreter", "value": "/usr/libexec/platform-python"}]}) -%}
           {%-   set _ = d.update({"rootfs_size": "100"}) -%}
           {%-   set _ = d.update({"volumes": [{"name": "/dev/sdf", "size": "100"}]}) -%}
@@ -119,8 +120,8 @@
           {%-   set _ = d.update({"public_dns": true}) -%}
           {%-   set _ = d.update({"dns_loadbalancer": true}) -%}
           {%-   set _ = d.update({"floating_ip": false}) -%}
-          {%-   set _ = d.update({"image": "RHEL84GOLD"}) -%}
-          {%-   set _ = d.update({"flavor": {"ec2": "m5.8xlarge"}}) -%}
+          {%-   set _ = d.update({"image": hana_instance_image}) -%}
+          {%-   set _ = d.update({"flavor": {"ec2": hana_instance_type}}) -%}
           {%-   set _ = d.update({"tags": [{"key": "AnsibleGroup", "value": "hanas"}, {"key": "ostype", "value": "linux"}, {"key": "ansible_python_interpreter", "value": "/usr/libexec/platform-python"}]}) -%}
           {%-   set _ = d.update({"rootfs_size": "100"}) -%}
           {%-   set _ = d.update({"volumes": [{"name": "/dev/sdf", "size": "500"}]}) -%}
@@ -140,8 +141,8 @@
           {%-   set _ = d.update({"public_dns": true}) -%}
           {%-   set _ = d.update({"dns_loadbalancer": true}) -%}
           {%-   set _ = d.update({"floating_ip": false}) -%}
-          {%-   set _ = d.update({"image": "RHEL84GOLD"}) -%}
-          {%-   set _ = d.update({"flavor": {"ec2": "m5.8xlarge"}}) -%}
+          {%-   set _ = d.update({"image": hana_instance_image}) -%}
+          {%-   set _ = d.update({"flavor": {"ec2": hana_instance_type}}) -%}
           {%-   set _ = d.update({"tags": [{"key": "AnsibleGroup", "value": "hanas"}, {"key": "ostype", "value": "linux"}, {"key": "ansible_python_interpreter", "value": "/usr/libexec/platform-python"}]}) -%}
           {%-   set _ = d.update({"rootfs_size": "100"}) -%}
           {%-   set _ = d.update({"volumes": [{"name": "/dev/sdf", "size": "500"}]}) -%}
@@ -153,8 +154,3 @@
     - name: add up instances
       ansible.builtin.set_fact:
         instances: "{{ bastion_instance }} + {{ tower_instances }} + {{ s4hana_instances }} + {{ hana1_instances }} + {{ hana2_instances }}"
-        # +  + "
-
-    #- debug:
-    #    msg: "{{ item }}"
-    #  loop: "{{ instances }}"
