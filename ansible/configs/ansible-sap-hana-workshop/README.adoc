@@ -1,0 +1,31 @@
+== Author Information
+
+**Author**: Josh Swanson (joshswanson@redhat.com)
+**Author**: Orcun Atakan (oatakan@redhat.com)
+
+== Overview
+
+*Ansible SAP HANA Workshop* This Ansible workshop covers the installation and maintenance of an SAP S4/HANA environment using the Red Hat Product portfolio. The instructor will lead students through deploying HANA and an S4 app server, then perform several maintenance activites against the systems.
+
+Each student workbench includes a pair of SAP HANA servers, an S4 application server, an instance of Ansible Controller, and a bastion host.
+
+Check out the link:https://mgmt-sa-tiger-team.github.io/sap-hana-workshop/[GitHub Page] for more information about this workshop.
+
+== Supported Cloud Providers
+
+* AWS
+
+== Provisioning the Workshop
+
+RHPDS will automatically feed in the information entered on the workshop order page. If you're provisioning this outside of RHPDS, check out the example `secret-vars.yml` file.
+
+To provision the workshop, run:
+`ansible-playbook main.yml --extra-vars @configs/ansible-sap-hana-workshop/secret-vars.yml`
+
+To teardown the workshop, run:
+`ansible-playbook destroy_env.yml --extra-vars @configs/ansible-sap-hana-workshop/secret-vars.yml`
+
+
+#TODO: Set up execution environment for provisioning the workshop.
+
+----
